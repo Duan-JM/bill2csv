@@ -24,3 +24,19 @@ ALIPAY_AVALIABLE_BILL_KEYS = [
     "商家订单号",
     "备注",
 ]
+
+# wechat relevant
+WECHAT_DELETE_LINE_TAG = "微信支付账单明细列表"
+WECHAT_AVALIABLE_BILL_KEYS = [
+    "交易时间",
+    "交易类型",
+    "交易对方",
+    "商品",
+    "收/支",
+    "金额(元)",
+    "支付方式",
+    "当前状态",
+    "交易单号",
+    "商户单号",
+    "备注",
+]

@@ -1,35 +1,55 @@
-import pandas as pd
 import PyPDF2 as pdf2
+from loguru import logger
+import pandas as pd
 
 from constants import (
+    ALIPAY_AVALIABLE_BILL_KEYS,
+    ALIPAY_DELETE_LINE_TAG,
     CARD_REMAIN_AMOUNT_COLUMN_NAME,
     DATE_COLUMN_NAME,
     TRADE_AMOUNT_COLUMN_NAME,
     TRADE_DEALER,
-    ALIPAY_DELETE_LINE_TAG,
-    ALIPAY_AVALIABLE_BILL_KEYS,
+    WECHAT_AVALIABLE_BILL_KEYS,
+    WECHAT_DELETE_LINE_TAG,
 )
 
 
-def delete_titles(file_path: str):
-    with open(file_path, "r", encoding="cp1252") as f:
-        raw_lines = f.readlines()
-    raw_lines = [bytes(x.encode("cp1252")).decode("gbk") for x in raw_lines]
+def delete_titles(file_path: str, delete_line_tag: str):
+    try:
+        # alipay is encoding with cp1252, however reformat and wechat is
+        # encoding normally
+        with open(file_path, "r", encoding="cp1252") as f:
+            raw_lines = f.readlines()
+        raw_lines = [bytes(x.encode("cp1252")).decode("gbk") for x in raw_lines]
+    except:
+        with open(file_path, "r") as f:
+            raw_lines = f.readlines()
+        raw_lines = [x for x in raw_lines]
 
     target_pos = 0
     for idx, row_content in enumerate(raw_lines):
-        if ALIPAY_DELETE_LINE_TAG in row_content:
+        if delete_line_tag in row_content:
             target_pos = idx
-    assert target_pos != 0, "Definitely target pos should larger than 0"
 
-    with open(file_path, "w") as f:
-        f.writelines(raw_lines[target_pos + 1 :])
+    if target_pos == 0:
+        logger.warning(
+            f"Definitely target pos not larger than 0, nothing deleted from {file_path}"
+        )
+    else:
+        with open(file_path, "w") as f:
+            f.writelines(raw_lines[target_pos + 1 :])
 
 
 def read_alipay_bill_csv(file_path: str):
-    delete_titles(file_path=file_path)
+    delete_titles(file_path=file_path, delete_line_tag=ALIPAY_DELETE_LINE_TAG)
     alipay_bill_pd = pd.DataFrame(pd.read_csv(file_path))
     return alipay_bill_pd[ALIPAY_AVALIABLE_BILL_KEYS]
+
+
+def read_wechat_bill_csv(file_path: str):
+    delete_titles(file_path=file_path, delete_line_tag=WECHAT_DELETE_LINE_TAG)
+    wechat_bill_pd = pd.DataFrame(pd.read_csv(file_path))
+    return wechat_bill_pd[WECHAT_AVALIABLE_BILL_KEYS]
 
 
 def read_cmbc_bill_pdf(bill_file_path) -> pd.DataFrame:
