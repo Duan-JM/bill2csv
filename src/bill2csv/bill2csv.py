@@ -4,6 +4,7 @@ import os
 from typing import Dict, Optional
 
 import pandas as pd
+from loguru import logger
 
 from constants import (
     FIRST_LABEL_NAME,
@@ -15,13 +16,12 @@ from loaders import read_alipay_bill_csv, read_cmbc_bill_pdf, read_wechat_bill_c
 from utils import get_current_date, prefill_label
 
 
-def prefilled_map() -> Dict:
+def prefilled_map(ref_table_folder: str) -> Dict:
     """Formulte prefilled_map"""
     file_paths = os.listdir(REFERENCE_TABLE_FOLDER_PATH)
     file_paths = [x for x in file_paths if x not in [".DS_Store"]]
     data_list = [
-        pd.DataFrame(pd.read_csv(f"{REFERENCE_TABLE_FOLDER_PATH}/{x}"))
-        for x in file_paths
+        pd.DataFrame(pd.read_csv(f"{ref_table_folder}/{x}")) for x in file_paths
     ]
     total_data = pd.concat(data_list, ignore_index=True)
     output_dict = dict()
@@ -137,9 +137,14 @@ def main(
     cmbc_bill_path: str,
     alipay_bill_path: Optional[str],
     wechat_bill_path: Optional[str],
-    output_path=f"./outputs/output_{get_current_date()}.csv",
+    ref_table_folder: Optional[str],
+    output_path: str,
 ):
-    prelabeled_map = prefilled_map()
+    if ref_table_folder:
+        prelabeled_map = prefilled_map(ref_table_folder=ref_table_folder)
+    else:
+        prelabeled_map = {}
+
     bill_pd = read_bill_from_pdf(cmbc_bill_path)
     prefilled_pd = prefill_bill(bill_pd=bill_pd, prefilled_map=prelabeled_map)
 
@@ -160,16 +165,32 @@ def main(
     prefilled_pd.to_csv(output_path, index=False)
 
 
-if __name__ == "__main__":
+def create_args():
+    OUTPUT_PATH = f"./outputs/output_{get_current_date()}.csv"
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--bill_folder", help="file_path")
+    parser.add_argument(
+        "--ref_table_folder",
+        default=REFERENCE_TABLE_FOLDER_PATH,
+        help="ref_table_folder",
+    )
+    parser.add_argument("--output_path", default=OUTPUT_PATH, help="output_path")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = create_args()
     bill_path_collection = fetch_bills_from_folder(args.bill_folder)
     if bill_path_collection["cmbc_bill_path"]:
         main(
             cmbc_bill_path=bill_path_collection["cmbc_bill_path"],
             alipay_bill_path=bill_path_collection["alipay_bill_path"],
             wechat_bill_path=bill_path_collection["wechat_bill_path"],
+            ref_table_folder=args.ref_table_folder,
+            output_path=args.output_path,
         )
+        logger.success(f"Export results to {args.output_path}")
     else:
         raise RuntimeError(f"cmbc_bill_path not found in {args.bill_folder}.")
