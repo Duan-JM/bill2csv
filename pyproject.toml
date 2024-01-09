@@ -1,5 +1,28 @@
 [build-system]
-requires = ["setuptools @ git+https://github.com/pypa/setuptools.git@main"]
+requires = [ "poetry-core>=1.0.4",]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "bill2csv"
+version = "0.0.1"
+description = "Test"
+authors = [ "Vincent Duan <vincent.duan95@outlook.com>",]
+maintainers = [ "Vincent Duan <vincent.duan95@outlook.com>",]
+repository = "https://github.com/Duan-JM/bill2csv"
+classifiers = [ "Development Status :: 5 - Production/Stable", "Intended Audience :: Developers", "License :: OSI Approved :: Apache Software License", "Topic :: Software Development :: Libraries",]
+keywords = [ "tools"]
+include = [ "LICENSE", "README.md"]
+readme = "README.md"
+license = "Apache-2.0"
+
+[tool.poetry.scripts]
+bill2csv = "bill2csv.__main__:run_entry"
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+pandas = ">=2.0.3"
+PyPDF2 = ">=3.0.1"
+loguru = ">=0.7.2"
 
 [tool.pytest.ini_options]
 pythonpath = "src"

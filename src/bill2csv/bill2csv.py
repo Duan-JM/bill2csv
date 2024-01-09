@@ -4,21 +4,20 @@ import os
 from typing import Dict, Optional
 
 import pandas as pd
-from loguru import logger
 
-from constants import (
+from .constants import (
     FIRST_LABEL_NAME,
     REFERENCE_TABLE_FOLDER_PATH,
     SECOND_LABEL_NAME,
     TRADE_DEALER,
 )
-from loaders import read_alipay_bill_csv, read_cmbc_bill_pdf, read_wechat_bill_csv
-from utils import get_current_date, prefill_label
+from .loaders import read_alipay_bill_csv, read_cmbc_bill_pdf, read_wechat_bill_csv
+from .utils import get_current_date, prefill_label
 
 
 def prefilled_map(ref_table_folder: str) -> Dict:
     """Formulte prefilled_map"""
-    file_paths = os.listdir(REFERENCE_TABLE_FOLDER_PATH)
+    file_paths = os.listdir(ref_table_folder)
     file_paths = [x for x in file_paths if x not in [".DS_Store"]]
     data_list = [
         pd.DataFrame(pd.read_csv(f"{ref_table_folder}/{x}")) for x in file_paths
@@ -178,19 +177,3 @@ def create_args():
     parser.add_argument("--output_path", default=OUTPUT_PATH, help="output_path")
     args = parser.parse_args()
     return args
-
-
-if __name__ == "__main__":
-    args = create_args()
-    bill_path_collection = fetch_bills_from_folder(args.bill_folder)
-    if bill_path_collection["cmbc_bill_path"]:
-        main(
-            cmbc_bill_path=bill_path_collection["cmbc_bill_path"],
-            alipay_bill_path=bill_path_collection["alipay_bill_path"],
-            wechat_bill_path=bill_path_collection["wechat_bill_path"],
-            ref_table_folder=args.ref_table_folder,
-            output_path=args.output_path,
-        )
-        logger.success(f"Export results to {args.output_path}")
-    else:
-        raise RuntimeError(f"cmbc_bill_path not found in {args.bill_folder}.")

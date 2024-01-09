@@ -2,7 +2,7 @@ import PyPDF2 as pdf2
 from loguru import logger
 import pandas as pd
 
-from constants import (
+from .constants import (
     ALIPAY_AVALIABLE_BILL_KEYS,
     ALIPAY_DELETE_LINE_TAG,
     CARD_REMAIN_AMOUNT_COLUMN_NAME,
